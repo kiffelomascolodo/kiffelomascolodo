@@ -1,0 +1,27 @@
+while True:
+            logger.info(f'{self.address}:{self.chain} - trying to bridge... ')
+            try:
+                tx = holograph.functions.bridgeOutRequest(to, self.GleamAddress, gas_lim, gas_price,payload).build_transaction({
+                    'from': self.address,
+                    'value': lzFee,
+                    'gas': holograph.functions.bridgeOutRequest(to, self.GleamAddress, gas_lim, gas_price,payload).estimate_gas({'from': self.address, 'value': lzFee,'nonce': self.w3.eth.get_transaction_count(self.address), }),
+                    'gasPrice': self.w3.eth.gas_price,
+                    'nonce': self.w3.eth.get_transaction_count(self.address),
+                })
+                sign = self.account.sign_transaction(tx)
+                hash = self.w3.eth.send_raw_transaction(sign.rawTransaction)
+                status = self.check_status_tx(hash)
+                self.sleep_indicator(10)
+                if status == 1:
+                    logger.success(f'{self.address}:{self.chain} - successfully bridged to {self.to} : {self.scan}{self.w3.to_hex(hash)}...')
+                    self.sleep_indicator(random.randint(self.delay[0],self.delay[1]))
+                    return self.address, 'success'
+            except Exception as e:
+                error = str(e)
+                if 'nonce too low' in error or 'already known' in error:
+                    logger.success(f'{self.address}:{self.chain} - successfully bridged to {self.to}...')
+                    self.sleep_indicator(random.randint(self.delay[0],self.delay[1]))
+                    return self.address, 'success'
+                logger.error(f'{self.address}:{self.chain} - error {e}')
+                return self.address, 'error'
+
